@@ -41,6 +41,15 @@ class WiSARD:
     def set_mapping(self, mapping):
         self.mapping = mapping
 
+    def get_mapping(self):
+        return self.mapping
+
+    def set_discriminators(self, ds):
+        self.discriminators = ds
+
+    def get_discriminators(self):
+        return self.discriminators
+
     def fit_class(self, name_class,retinas):
         tuple_ = [[0 for x in range(self.tuple_size)] for y in range(self.M)]
         if(name_class not in self.discriminators):
@@ -82,5 +91,5 @@ class WiSARD:
                 results.append((R, classes))
             results.sort()
             if( (results[-1][0] > results[-2][0]) or (bleaching == self.max_bleaching) ):
-                confidence = (results[-1][0] - results[-2][0])/results[-1][0]
-                return (results[-1][1], confidence)
+            #    confidence = (results[-1][0] - results[-2][0])/results[-1][0]
+                return results[-1][1]
