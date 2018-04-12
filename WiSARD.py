@@ -50,41 +50,38 @@ class WiSARD:
     def get_discriminators(self):
         return self.discriminators
 
-    def fit_class(self, name_class,retinas):
-        tuple_ = [[0 for x in range(self.tuple_size)] for y in range(self.M)]
-        if(name_class not in self.discriminators):
-            self.discriminators[name_class] = {}
-            for i in range(0, len(tuple_)):
-                self.discriminators[name_class][i] = {}
+    def fit_class(self, labels,retinas):
+        if(len(retinas) != len(labels) ):
+            print("Size error")
+            return 0
+        for i in range(len(labels)):
+            if(labels[i] not in self.discriminators):
+                self.discriminators[labels[i]] = [{} for x in range(self.M)]
 
-        for retina in retinas:
-            for i in range(0, len(tuple_)):
-                for j in range(0, len(tuple_[i])):
-                    pixel = self.mapping[i][j]
-                    tuple_[i][j] = retina[pixel[0]][pixel[1]]
+            for j in range(self.M):
+                pos_ram = 0
+                for k in range(self.tuple_size):
+                    pixel = self.mapping[j][k]
+                    pos_ram += retinas[i][pixel[0]][pixel[1]]* (2**k)
 
-                pos_ram = convert_toBinary(tuple_[i])
+                if(pos_ram not in self.discriminators[labels[i]][j]):
+                    self.discriminators[labels[i]][j][pos_ram] = 0
 
-                if(pos_ram not in self.discriminators[name_class][i]):
-                    self.discriminators[name_class][i][pos_ram] = 0
-
-                self.discriminators[name_class][i][pos_ram] += 1
-                self.max_bleaching = max(self.max_bleaching, self.discriminators[name_class][i][pos_ram])
+                self.discriminators[labels[i]][j][pos_ram] += 1
+                self.max_bleaching = max(self.max_bleaching, self.discriminators[labels[i]][j][pos_ram])
 
     # necessário pelo menos duas classes para que possa classificar
     def classify(self, retina):
-        tuple_ = [[0 for x in range(self.tuple_size)] for y in range(self.M)]
 
         for bleaching in range(1, self.max_bleaching+1):
             results = []
             for classes in self.discriminators:
                 R = 0
-                for i in range(0, len(tuple_)):
-                    for j in range(0, len(tuple_[i])):
+                for i in range(self.M):
+                    pos_ram=0
+                    for j in range(self.tuple_size):
                         pixel = self.mapping[i][j]
-                        tuple_[i][j] = retina[pixel[0]][pixel[1]]
-
-                    pos_ram = convert_toBinary(tuple_[i])
+                        pos_ram += retina[pixel[0]][pixel[1]] * (2**j)
 
                     if( (pos_ram in self.discriminators[classes][i]) and (self.discriminators[classes][i][pos_ram] >= bleaching) ):
                         R+=1
@@ -92,4 +89,5 @@ class WiSARD:
             results.sort()
             if( (results[-1][0] > results[-2][0]) or (bleaching == self.max_bleaching) ):
             #    confidence = (results[-1][0] - results[-2][0])/results[-1][0]
+            #    print(bleaching)
                 return results[-1][1]
