@@ -1,4 +1,5 @@
 import random
+import bisect
 
 def convert_toBinary(x):
     temp = 1
@@ -71,23 +72,29 @@ class WiSARD:
                 self.max_bleaching = max(self.max_bleaching, self.discriminators[labels[i]][j][pos_ram])
 
     # necessário pelo menos duas classes para que possa classificar
-    def classify(self, retina):
-
-        for bleaching in range(1, self.max_bleaching+1):
-            results = []
+    def classify(self, retinas):
+        ret = []
+        for retina in retinas:
+            ram_count = {}
             for classes in self.discriminators:
-                R = 0
+                ram_count[classes] = []
                 for i in range(self.M):
                     pos_ram=0
                     for j in range(self.tuple_size):
                         pixel = self.mapping[i][j]
                         pos_ram += retina[pixel[0]][pixel[1]] * (2**j)
-
-                    if( (pos_ram in self.discriminators[classes][i]) and (self.discriminators[classes][i][pos_ram] >= bleaching) ):
-                        R+=1
-                results.append((R, classes))
-            results.sort()
-            if( (results[-1][0] > results[-2][0]) or (bleaching == self.max_bleaching) ):
-            #    confidence = (results[-1][0] - results[-2][0])/results[-1][0]
-            #    print(bleaching)
-                return results[-1][1]
+                    if(pos_ram in self.discriminators[classes][i]):
+                        ram_count[classes].append(self.discriminators[classes][i][pos_ram])
+                ram_count[classes].sort()
+            for bleaching in range(1, self.max_bleaching+1):
+                results = []
+                for classes in self.discriminators:
+                    R = len(ram_count[classes]) -  bisect.bisect_right(ram_count[classes], bleaching)
+                    results.append((R, classes))
+                results.sort()
+                if( (results[-1][0] > results[-2][0]) or (bleaching == self.max_bleaching) ):
+                #    confidence = (results[-1][0] - results[-2][0])/results[-1][0]
+                #    print(bleaching)
+                    ret.append(results[-1][1])
+                    break
+        return ret

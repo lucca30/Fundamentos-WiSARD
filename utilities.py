@@ -1,3 +1,4 @@
+import time
 def filter_image(image, k):
     temp = []
     for i in range(0, len(image)):
@@ -16,12 +17,22 @@ def eval(wisard, x_train , y_train , x_test, y_test, iterations=1):
     best_case = 0.0
     for i in range(iterations):
         wisard.random_mapping()
+        print("Starting Training...")
+        start_time = time.time()
         wisard.fit_class( y_train, x_train)
+        print("Duration : " + str(time.time()-start_time) )
+        print("Average of each image trained: ", str((time.time()-start_time) / len(x_train)))
         total_cases = len(x_test)
         success = 0
-        for j in range(total_cases):
-            if(wisard.classify(x_test[j]) == y_test[j] ):
+        print("Starting Clasify...")
+        start_time = time.time()
+        answers = wisard.classify(x_test)
+        for i in range(len(y_test)):
+            if(y_test[i]==answers[i]):
                 success+=1
+        print("Duration : " + str(time.time()-start_time) )
+        print("Average of each image classified: ", str((time.time()-start_time) / len(x_test)))
+
         result = success/total_cases
         if(result > best_case):
             best_case = result
