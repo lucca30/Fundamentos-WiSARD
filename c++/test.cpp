@@ -1,8 +1,10 @@
 #include<bits/stdc++.h>
 #include "WiSARD.h"
+#define NTESTES 10
 #define n_train 60000
 #define n_test 10000
 #define tuple_size 28*28
+#define RAM_SIZE 28
 #define path_train_images "../data/mnist/train_images.txt"
 #define path_train_labels "../data/mnist/train_labels.txt"
 #define path_test_images "../data/mnist/test_images.txt"
@@ -56,25 +58,36 @@ int main(void){
   }
   fclose(file_test_labels);
 
+  double best_result = 0;
+  for(int k=0;k<NTESTES;k++){
+    printf("Starting WiSARD...\n");
+    WiSARD w(tuple_size, RAM_SIZE);
+    w.random_mapping();
 
-  printf("Starting WiSARD...\n");
-  WiSARD w(tuple_size, 28);
-  w.random_mapping();
-  printf("Starting fit...\n" );
-  w.fit(n_train, images, labels);
-  printf("Fit ended\n");
-  //w.print_discriminator();
-  printf("Starting classify...\n");
-  vector<string> results = w.classify(n_test, test_images);
-  printf("Ending classify\n");
-  int sum = 0;
-  for(int i=0;i<n_test;i++){
-    if(results[i]==test_labels[i]){
-      sum+=1;
+    printf("Starting fit...\n" );
+    clock_t begin = clock();
+    w.fit(n_train, images, labels);
+    clock_t end = clock();
+    printf("Fit ended\n");
+    printf("Fit time: %lf\n", double(end-begin)/CLOCKS_PER_SEC);
+    //w.print_discriminator();
+    printf("Starting classify...\n");
+    begin = clock();
+    vector<string> results = w.classify(n_test, test_images);
+    end = clock();
+    printf("Ending classify\n");
+    printf("Classify time: %lf\n", double(end-begin)/CLOCKS_PER_SEC);
+    int sum = 0;
+    for(int i=0;i<n_test;i++){
+      if(results[i]==test_labels[i]){
+        sum+=1;
+      }
     }
+    printf("Precision : %lf\n", double(sum)/double(n_test));
+    best_result = max(best_result, double(sum)/double(n_test));
+    w.free_space();
   }
-  printf("Precision : %lf\n", double(sum)/double(n_test));
-  w.free_space();
+  printf("Best Result: %lf\n", best_result);
   for (int i = 0; i < n_train; i++)
       delete [] images[i];
   delete [] images;

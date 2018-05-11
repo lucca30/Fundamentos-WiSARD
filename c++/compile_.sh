@@ -1,1 +1,1 @@
- g++ -std=c++11 WiSARD.cpp test.cpp -o test
+g++ -std=c++11 WiSARD.cpp avaliador.cpp -o avaliador -O3
